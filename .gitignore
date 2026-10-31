@@ -1,0 +1,20 @@
+# Simulator temporary files and outputs
+work/
+transcript
+vsim.wlf
+*.vcd
+*.vpd
+*.fsdb
+*.log
+obj_dir/
+*.jou
+*.pb
+
+# Python temporary files
+__pycache__/
+*.pyc
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
