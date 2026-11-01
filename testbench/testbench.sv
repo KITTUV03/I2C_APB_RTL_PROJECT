@@ -55,7 +55,9 @@ module tb_top;
     uvm_config_db#(virtual apb_if)::set(null, "*", "apb_vif", apb_vif);
     uvm_config_db#(virtual i2c_if)::set(null, "*", "i2c_vif", i2c_vif);
 
-    run_test("i2c_write_test");
+    // Default test is i2c_write_read_test (runs Write followed by Read)
+    // Can be overridden via command line with +UVM_TESTNAME=<name>
+    run_test("i2c_write_read_test");
   end
 
   initial begin

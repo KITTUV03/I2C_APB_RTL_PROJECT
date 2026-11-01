@@ -34,6 +34,7 @@ package pkg;
   `include "i2c_apb_base_test.sv"
   `include "i2c_write_test.sv"
   `include "i2c_read_test.sv"
+  `include "i2c_write_read_test.sv"
 
 endpackage
 
