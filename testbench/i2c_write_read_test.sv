@@ -1,6 +1,12 @@
 `ifndef I2C_WRITE_READ_TEST_SV
 `define I2C_WRITE_READ_TEST_SV
 
+// ============================================================================
+// I2C Write-Read Combined Test:
+// 1. Performs a 4-byte Master Write to Slave 7'h50 (0x11, 0x22, 0x33, 0x44)
+// 2. Performs a 4-byte Master Read from Slave 7'h50
+// 3. Verifies that read data matches the written data!
+// ============================================================================
 class i2c_write_read_test extends i2c_apb_base_test;
 
   `uvm_component_utils(i2c_write_read_test)

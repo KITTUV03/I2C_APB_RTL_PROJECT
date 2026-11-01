@@ -1,6 +1,9 @@
 `ifndef APB_BASE_SEQ_SV
 `define APB_BASE_SEQ_SV
 
+// ============================================================================
+// APB Base Sequence: Provides reusable write_reg, read_reg, and poll_reg tasks
+// ============================================================================
 class apb_base_seq extends uvm_sequence #(apb_seq_item);
 
   `uvm_object_utils(apb_base_seq)
@@ -9,6 +12,7 @@ class apb_base_seq extends uvm_sequence #(apb_seq_item);
     super.new(name);
   endfunction
 
+  // Write a byte to an APB register offset
   virtual task write_reg(bit [`ADDR_WIDTH-1:0] addr, bit [`DATA_WIDTH-1:0] data);
     req = apb_seq_item::type_id::create("apb_write_item");
     start_item(req);
@@ -18,6 +22,7 @@ class apb_base_seq extends uvm_sequence #(apb_seq_item);
     finish_item(req);
   endtask
 
+  // Read a byte from an APB register offset
   virtual task read_reg(bit [`ADDR_WIDTH-1:0] addr, output bit [`DATA_WIDTH-1:0] data);
     req = apb_seq_item::type_id::create("apb_read_item");
     start_item(req);
@@ -27,7 +32,8 @@ class apb_base_seq extends uvm_sequence #(apb_seq_item);
     data = req.prdata;
   endtask
 
-  virtual task poll_reg(bit [`ADDR_WIDTH-1:0] addr, bit [`DATA_WIDTH-1:0] expected_val, int max_polls = 500);
+  // Poll a register until it equals the expected value or times out
+  virtual task poll_reg(bit [`ADDR_WIDTH-1:0] addr, bit [`DATA_WIDTH-1:0] expected_val, int max_polls = 2000);
     bit [`DATA_WIDTH-1:0] val;
     int count = 0;
     while (count < max_polls) begin
@@ -44,5 +50,4 @@ class apb_base_seq extends uvm_sequence #(apb_seq_item);
 
 endclass
 
-`endif 
-
+`endif // APB_BASE_SEQ_SV

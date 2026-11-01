@@ -1,6 +1,9 @@
 `ifndef I2C_MONITOR_SV
 `define I2C_MONITOR_SV
 
+// ============================================================================
+// I2C Monitor: Observes transactions on the I2C bus (START, ADDR, DATA, STOP)
+// ============================================================================
 class i2c_monitor extends uvm_monitor;
 
   `uvm_component_utils(i2c_monitor)
@@ -22,58 +25,68 @@ class i2c_monitor extends uvm_monitor;
 
   virtual task run_phase(uvm_phase phase);
     i2c_seq_item item;
-    logic [7:0]  header_byte;
+    logic [7:0]  header;
     logic [7:0]  data_byte;
     bit          ack_bit;
+    bit          stop_seen;
 
     forever begin
       wait_for_start();
 
       item = i2c_seq_item::type_id::create("monitored_i2c_item");
 
-      // Sample Address Byte
-      sample_byte(header_byte, ack_bit);
-      item.addr       = header_byte[7:1];
-      item.op         = header_byte[0] ? I2C_READ : I2C_WRITE;
-      item.ack_status = ack_bit ? I2C_NACK : I2C_ACK;
+      // Sample 8-bit Address header + 9th clock ACK
+      sample_byte(header, ack_bit, stop_seen);
+      if (stop_seen) continue;
 
-      `uvm_info("I2C_MON", $sformatf("Observed Address Phase: ADDR=0x%02h, OP=%s, ACK=%s",
-                item.addr, item.op.name(), item.ack_status.name()), UVM_MEDIUM)
+      item.addr = header[7:1];
+      item.rw   = header[0];
+      item.ack  = ack_bit;
 
-      // If Address was NACKed, transaction ends
-      if (item.ack_status == I2C_NACK) begin
-        item.stop_detected = 1'b1;
-        item_collected_port.write(item);
-        continue;
+      `uvm_info("I2C_MON", $sformatf("Observed Address Phase: ADDR=0x%02h, %s, ACK=%0b",
+                item.addr, (item.rw ? "READ" : "WRITE"), item.ack), UVM_MEDIUM)
+
+      // If address was ACKed, continue sampling data bytes until STOP
+      if (item.ack == 1'b0) begin
+        forever begin
+          sample_byte(data_byte, ack_bit, stop_seen);
+          if (stop_seen) begin
+            `uvm_info("I2C_MON", "STOP condition observed on bus", UVM_MEDIUM)
+            break;
+          end
+          item.data_q.push_back(data_byte);
+          `uvm_info("I2C_MON", $sformatf("Observed Data Byte: 0x%02h (ACK=%0b)", data_byte, ack_bit), UVM_HIGH)
+        end
       end
 
-      // Sample Data Bytes until STOP or Repeated START
+      // Broadcast completed transaction
+      item_collected_port.write(item);
+    end
+  endtask
+
+  // Detect START condition: SDA falling while SCL is HIGH
+  virtual task wait_for_start();
+    while (1) begin
+      @(negedge vif.sda);
+      if (vif.scl === 1'b1) break;
+    end
+  endtask
+
+  // Samples 8 data bits and 1 ACK bit, or exits if STOP occurs
+  virtual task sample_byte(output logic [7:0] data, output bit ack, output bit stop_seen);
+    stop_seen = 1'b0;
+    ack       = 1'b1;
+
+    for (int i = 7; i >= 0; i--) begin
       fork
-        begin 
-          forever begin
-            sample_byte(data_byte, ack_bit);
-            item.data_q.push_back(data_byte);
-            item.data_ack_q.push_back(ack_bit ? I2C_NACK : I2C_ACK);
-            `uvm_info("I2C_MON", $sformatf("Observed Data Byte: 0x%02h, ACK=%s",
-                      data_byte, (ack_bit ? "NACK" : "ACK")), UVM_HIGH)
-          end
+        begin : wait_scl
+          @(posedge vif.scl);
         end
-        begin 
+        begin : wait_stop
           while (1) begin
             @(posedge vif.sda);
             if (vif.scl === 1'b1) begin
-              `uvm_info("I2C_MON", "STOP condition observed on bus", UVM_MEDIUM)
-              item.stop_detected = 1'b1;
-              break;
-            end
-          end
-        end
-        begin 
-          while (1) begin
-            @(negedge vif.sda);
-            if (vif.scl === 1'b1) begin
-              `uvm_info("I2C_MON", "Repeated START observed on bus", UVM_MEDIUM)
-              item.repeated_start = 1'b1;
+              stop_seen = 1'b1;
               break;
             end
           end
@@ -81,31 +94,18 @@ class i2c_monitor extends uvm_monitor;
       join_any
       disable fork;
 
-      item_collected_port.write(item);
-    end
-  endtask
+      if (stop_seen) return;
 
-  virtual task wait_for_start();
-    while (1) begin
-      @(negedge vif.sda);
-      if (vif.scl === 1'b1)
-        break;
-    end
-  endtask
-
-  virtual task sample_byte(output logic [7:0] byte_out, output bit ack_out);
-    for (int i = 7; i >= 0; i--) begin
-      @(posedge vif.scl);
-      byte_out[i] = vif.sda;
+      data[i] = vif.sda;
       @(negedge vif.scl);
     end
+
     // Sample 9th clock (ACK bit)
     @(posedge vif.scl);
-    ack_out = (vif.sda === 1'b1);
+    ack = vif.sda;
     @(negedge vif.scl);
   endtask
 
 endclass
 
-`endif 
-
+`endif // I2C_MONITOR_SV

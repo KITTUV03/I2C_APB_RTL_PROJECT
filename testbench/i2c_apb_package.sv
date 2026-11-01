@@ -38,4 +38,4 @@ package pkg;
 
 endpackage
 
-`endif 
+`endif // I2C_APB_PACKAGE_SV

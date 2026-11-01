@@ -1,6 +1,9 @@
 `ifndef APB_SEQUENCER_SV
 `define APB_SEQUENCER_SV
 
+// ============================================================================
+// APB Sequencer: Routes APB items from sequences to the driver
+// ============================================================================
 class apb_sequencer extends uvm_sequencer #(apb_seq_item);
 
   `uvm_component_utils(apb_sequencer)
@@ -11,5 +14,4 @@ class apb_sequencer extends uvm_sequencer #(apb_seq_item);
 
 endclass
 
-`endif 
-
+`endif // APB_SEQUENCER_SV

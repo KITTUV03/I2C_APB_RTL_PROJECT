@@ -1,6 +1,9 @@
 `ifndef I2C_AGENT_SV
 `define I2C_AGENT_SV
 
+// ============================================================================
+// I2C Agent: Encapsulates driver, sequencer, and monitor for the I2C bus
+// ============================================================================
 class i2c_agent extends uvm_agent;
 
   `uvm_component_utils(i2c_agent)
@@ -15,7 +18,9 @@ class i2c_agent extends uvm_agent;
 
   virtual function void build_phase(uvm_phase phase);
     super.build_phase(phase);
+
     monitor = i2c_monitor::type_id::create("monitor", this);
+
     if (get_is_active() == UVM_ACTIVE) begin
       driver    = i2c_driver::type_id::create("driver", this);
       sequencer = i2c_sequencer::type_id::create("sequencer", this);
@@ -31,5 +36,4 @@ class i2c_agent extends uvm_agent;
 
 endclass
 
-`endif 
-
+`endif // I2C_AGENT_SV

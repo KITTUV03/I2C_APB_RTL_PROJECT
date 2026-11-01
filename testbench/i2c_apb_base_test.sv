@@ -1,6 +1,9 @@
 `ifndef I2C_APB_BASE_TEST_SV
 `define I2C_APB_BASE_TEST_SV
 
+// ============================================================================
+// I2C APB Base Test: Base class creating the environment and printing topology
+// ============================================================================
 class i2c_apb_base_test extends uvm_test;
 
   `uvm_component_utils(i2c_apb_base_test)
@@ -23,5 +26,4 @@ class i2c_apb_base_test extends uvm_test;
 
 endclass
 
-`endif 
-
+`endif // I2C_APB_BASE_TEST_SV
