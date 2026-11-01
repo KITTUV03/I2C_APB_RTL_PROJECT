@@ -21,7 +21,6 @@ class i2c_driver extends uvm_driver #(i2c_seq_item);
 
   function new(string name = "i2c_driver", uvm_component parent = null);
     super.new(name, parent);
-    // Initialize default memory content
     for (int i = 0; i < 256; i++) begin
       memory[i] = 8'h00;
     end
@@ -44,12 +43,12 @@ class i2c_driver extends uvm_driver #(i2c_seq_item);
     end
   endtask
 
-  // Detect START condition: SDA falling while SCL is HIGH
+  // Detect START or Repeated START condition: SDA falling while SCL is HIGH
   virtual task wait_for_start();
     while (1) begin
       @(negedge vif.sda);
       if (vif.scl === 1'b1) begin
-        `uvm_info("I2C_DRV", "START condition detected on bus", UVM_HIGH)
+        `uvm_info("I2C_DRV", "START / Repeated START detected on bus", UVM_HIGH)
         break;
       end
     end
@@ -88,26 +87,30 @@ class i2c_driver extends uvm_driver #(i2c_seq_item);
     end
   endtask
 
-  // Slave Receive: Receives bytes from Master and writes into internal memory
+  // Slave Receive: Receives bytes from Master until STOP / Repeated START
   virtual task handle_slave_rx();
     logic [7:0] rx_byte;
-    bit         stop_detected;
-
-    forever begin
-      read_byte_or_stop(rx_byte, stop_detected);
-      if (stop_detected) begin
-        `uvm_info("I2C_DRV", "STOP condition detected. Slave write complete.", UVM_HIGH)
-        break;
+    fork
+      begin : rx_loop
+        forever begin
+          read_byte(rx_byte);
+          memory[mem_ptr] = rx_byte;
+          `uvm_info("I2C_DRV", $sformatf("Slave stored byte 0x%02h at mem[%0d]", rx_byte, mem_ptr), UVM_MEDIUM)
+          mem_ptr = (mem_ptr + 1) % 256;
+          send_ack();
+        end
       end
-
-      // Store byte in memory
-      memory[mem_ptr] = rx_byte;
-      `uvm_info("I2C_DRV", $sformatf("Slave stored byte 0x%02h at mem[%0d]", rx_byte, mem_ptr), UVM_MEDIUM)
-      mem_ptr = (mem_ptr + 1) % 256;
-
-      // Acknowledge the received data byte
-      send_ack();
-    end
+      begin : detect_end
+        while (1) begin
+          @(vif.sda);
+          if (vif.scl === 1'b1) begin
+            `uvm_info("I2C_DRV", "STOP or Repeated START condition detected. Ending Slave RX.", UVM_HIGH)
+            break;
+          end
+        end
+      end
+    join_any
+    disable fork;
   endtask
 
   // Slave Transmit: Transmits bytes from internal memory to Master
@@ -115,7 +118,7 @@ class i2c_driver extends uvm_driver #(i2c_seq_item);
     logic [7:0] tx_byte;
     bit         master_nack;
 
-    forever begin
+    while (1) begin
       tx_byte = get_memory_data(mem_ptr);
       `uvm_info("I2C_DRV", $sformatf("Slave sending byte 0x%02h from mem[%0d]", tx_byte, mem_ptr), UVM_MEDIUM)
       mem_ptr = (mem_ptr + 1) % 256;
@@ -147,33 +150,6 @@ class i2c_driver extends uvm_driver #(i2c_seq_item);
   virtual task read_byte(output logic [7:0] data);
     for (int i = 7; i >= 0; i--) begin
       @(posedge vif.scl);
-      data[i] = vif.sda;
-      @(negedge vif.scl);
-    end
-  endtask
-
-  // Read 1 byte or exit if STOP condition occurs
-  virtual task read_byte_or_stop(output logic [7:0] data, output bit stop_detected);
-    stop_detected = 1'b0;
-    for (int i = 7; i >= 0; i--) begin
-      fork
-        begin : wait_clk
-          @(posedge vif.scl);
-        end
-        begin : wait_stop
-          while (1) begin
-            @(posedge vif.sda);
-            if (vif.scl === 1'b1) begin
-              stop_detected = 1'b1;
-              break;
-            end
-          end
-        end
-      join_any
-      disable fork;
-
-      if (stop_detected) return;
-
       data[i] = vif.sda;
       @(negedge vif.scl);
     end
