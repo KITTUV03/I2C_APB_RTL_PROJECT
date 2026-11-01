@@ -48,7 +48,7 @@ class i2c_apb_coverage extends uvm_subscriber #(apb_seq_item);
       bins mode_10bit = {1'b1};
     }
 
-    cp_addr_ack: coverpoint sampled_i2c.addr_ack {
+    cp_ack_status: coverpoint sampled_i2c.ack_status {
       bins ack  = {I2C_ACK};
       bins nack = {I2C_NACK};
     }
@@ -64,7 +64,7 @@ class i2c_apb_coverage extends uvm_subscriber #(apb_seq_item);
       bins rep_start     = {1'b1};
     }
 
-    cx_op_ack: cross cp_op, cp_addr_ack;
+    cx_op_ack: cross cp_op, cp_ack_status;
   endgroup
 
   function new(string name = "i2c_apb_coverage", uvm_component parent = null);

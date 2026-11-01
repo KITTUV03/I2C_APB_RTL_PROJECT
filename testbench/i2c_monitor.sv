@@ -33,15 +33,15 @@ class i2c_monitor extends uvm_monitor;
 
       // Sample Address Byte
       sample_byte(header_byte, ack_bit);
-      item.addr     = header_byte[7:1];
-      item.op       = header_byte[0] ? I2C_READ : I2C_WRITE;
-      item.addr_ack = ack_bit ? I2C_NACK : I2C_ACK;
+      item.addr       = header_byte[7:1];
+      item.op         = header_byte[0] ? I2C_READ : I2C_WRITE;
+      item.ack_status = ack_bit ? I2C_NACK : I2C_ACK;
 
       `uvm_info("I2C_MON", $sformatf("Observed Address Phase: ADDR=0x%02h, OP=%s, ACK=%s",
-                item.addr, item.op.name(), item.addr_ack.name()), UVM_MEDIUM)
+                item.addr, item.op.name(), item.ack_status.name()), UVM_MEDIUM)
 
       // If Address was NACKed, transaction ends
-      if (item.addr_ack == I2C_NACK) begin
+      if (item.ack_status == I2C_NACK) begin
         item.stop_detected = 1'b1;
         item_collected_port.write(item);
         continue;
