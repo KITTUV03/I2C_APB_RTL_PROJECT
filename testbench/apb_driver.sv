@@ -20,7 +20,9 @@ class apb_driver extends uvm_driver #(apb_seq_item);
 
   virtual task run_phase(uvm_phase phase);
     reset_signals();
-    wait (vif.PRESETn === `RESET_DEASSERT);
+
+    while(!`RESET_DEASSERT)
+    //wait (vif.PRESETn === `RESET_DEASSERT);
     @(posedge vif.PCLK);
 
     forever begin
