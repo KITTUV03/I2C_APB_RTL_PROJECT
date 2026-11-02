@@ -10,7 +10,7 @@ package pkg;
   import uvm_pkg::*;
   `include "uvm_macros.svh"
 
-  `include "i2c_sequence_item.sv"
+  `include "i2c_seq_item.sv"
   `include "apb_seq_item.sv"
 
   `include "apb_sequencer.sv"
@@ -34,8 +34,8 @@ package pkg;
   `include "i2c_apb_base_test.sv"
   `include "i2c_write_test.sv"
   `include "i2c_read_test.sv"
-  `include "i2c_write_read_test.sv"
+  `include "i2c_read_write_test.sv"
 
 endpackage
 
-`endif // I2C_APB_PACKAGE_SV
+`endif 

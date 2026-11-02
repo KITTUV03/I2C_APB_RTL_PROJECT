@@ -1,9 +1,6 @@
 `ifndef APB_MONITOR_SV
 `define APB_MONITOR_SV
 
-// ============================================================================
-// APB Monitor: Observes APB transactions during valid ACCESS cycles
-// ============================================================================
 class apb_monitor extends uvm_monitor;
 
   `uvm_component_utils(apb_monitor)
@@ -26,13 +23,11 @@ class apb_monitor extends uvm_monitor;
   virtual task run_phase(uvm_phase phase);
     apb_seq_item item;
 
-    // Wait until reset is deasserted
     wait (vif.PRESETn === `RESET_DEASSERT);
 
     forever begin
       @(posedge vif.PCLK);
-
-      // Sample transfer at the end of the ACCESS phase (PSEL & PENABLE & PREADY)
+      
       if (vif.PRESETn === `RESET_DEASSERT && vif.PSEL && vif.PENABLE && vif.PREADY) begin
         item = apb_seq_item::type_id::create("monitored_apb_item");
         item.paddr   = vif.PADDR;
@@ -43,7 +38,6 @@ class apb_monitor extends uvm_monitor;
         else
           item.prdata = vif.PRDATA;
 
-        // Broadcast to scoreboard and coverage
         item_collected_port.write(item);
       end
     end
@@ -51,4 +45,5 @@ class apb_monitor extends uvm_monitor;
 
 endclass
 
-`endif // APB_MONITOR_SV
+`endif 
+

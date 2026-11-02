@@ -1,10 +1,6 @@
 `ifndef I2C_APB_ENV_SV
 `define I2C_APB_ENV_SV
 
-// ============================================================================
-// I2C APB Environment: Instantiates and connects APB agent, I2C agent,
-// scoreboard, and coverage subscriber.
-// ============================================================================
 class i2c_apb_env extends uvm_env;
 
   `uvm_component_utils(i2c_apb_env)
@@ -28,15 +24,14 @@ class i2c_apb_env extends uvm_env;
 
   virtual function void connect_phase(uvm_phase phase);
     super.connect_phase(phase);
-    // Connect APB monitor to Scoreboard and Coverage
     apb_agnt.monitor.item_collected_port.connect(scb.apb_export);
     apb_agnt.monitor.item_collected_port.connect(cov.analysis_export);
 
-    // Connect I2C monitor to Scoreboard and Coverage
     i2c_agnt.monitor.item_collected_port.connect(scb.i2c_export);
     i2c_agnt.monitor.item_collected_port.connect(cov.i2c_export);
   endfunction
 
 endclass
 
-`endif // I2C_APB_ENV_SV
+`endif 
+

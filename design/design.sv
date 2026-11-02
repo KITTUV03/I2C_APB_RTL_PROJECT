@@ -1,3 +1,4 @@
+// Code your design here
 `include "i2c_bit.sv"
 `include "i2c_byte_fsm.sv"
 `include "i2c_counter.sv"

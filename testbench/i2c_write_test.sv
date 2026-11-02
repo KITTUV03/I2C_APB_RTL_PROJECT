@@ -1,9 +1,6 @@
 `ifndef I2C_WRITE_TEST_SV
 `define I2C_WRITE_TEST_SV
 
-// ============================================================================
-// I2C Write Test: Executes a 4-byte master write transfer to slave 7'h50
-// ============================================================================
 class i2c_write_test extends i2c_apb_base_test;
 
   `uvm_component_utils(i2c_write_test)
@@ -36,3 +33,4 @@ class i2c_write_test extends i2c_apb_base_test;
 endclass
 
 `endif // I2C_WRITE_TEST_SV
+

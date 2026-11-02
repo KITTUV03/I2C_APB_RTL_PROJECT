@@ -1,9 +1,6 @@
 `ifndef APB_AGENT_SV
 `define APB_AGENT_SV
 
-// ============================================================================
-// APB Agent: Encapsulates driver, sequencer, and monitor for the APB bus
-// ============================================================================
 class apb_agent extends uvm_agent;
 
   `uvm_component_utils(apb_agent)
@@ -18,11 +15,7 @@ class apb_agent extends uvm_agent;
 
   virtual function void build_phase(uvm_phase phase);
     super.build_phase(phase);
-
-    // Monitor is always built
     monitor = apb_monitor::type_id::create("monitor", this);
-
-    // Driver and sequencer only built when active
     if (get_is_active() == UVM_ACTIVE) begin
       driver    = apb_driver::type_id::create("driver", this);
       sequencer = apb_sequencer::type_id::create("sequencer", this);
@@ -38,4 +31,5 @@ class apb_agent extends uvm_agent;
 
 endclass
 
-`endif // APB_AGENT_SV
+`endif 
+
