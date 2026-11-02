@@ -28,7 +28,6 @@ class i2c_write_seq extends apb_base_seq;
     // Configure Mode (Standard 100 kHz, 7-bit mode -> 3'b000)
     write_reg(`REG_MODE, 3'b000);
 
-    // Queue TX Data Bytes (Pushed to Command FIFO as CMD_TX)
     if (data_bytes.size() == 0) begin
       data_bytes = '{8'h11, 8'h22, 8'h33, 8'h44};
     end
@@ -38,15 +37,12 @@ class i2c_write_seq extends apb_base_seq;
       write_reg(`REG_TX_DATA, data_bytes[i]);
     end
 
-    // Poll TX_COUNT_LOW (offset 0x12) until all bytes have completed
     `uvm_info("WRITE_SEQ", $sformatf("Waiting for TX_COUNT to reach %0d...", data_bytes.size()), UVM_LOW)
     poll_reg(`REG_TX_COUNT_LOW, data_bytes.size(), 2000);
 
-    // Read back final status
     read_reg(`REG_TX_COUNT_LOW, tx_cnt);
     `uvm_info("WRITE_SEQ", $sformatf("I2C Write Sequence Complete! Final TX_COUNT = %0d", tx_cnt), UVM_LOW)
 
-    // Allow time for STOP condition to settle on bus (as per spec Section 6.10: ~15us in Standard mode)
     #20us;
   endtask
 

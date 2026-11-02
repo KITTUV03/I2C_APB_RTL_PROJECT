@@ -31,7 +31,6 @@ class i2c_seq_item extends uvm_sequence_item;
   
   rand i2c_cmd_type_e     cmd_type;       // Normal / Start / Repeated Start / Stop
 
-  // Reactive Slave & Error Injection Controls
   rand int unsigned       stretch_cycles; // SCL clock stretch cycles (0 = no stretch)
   rand bit                inject_nack;    // 1: Force a NACK
   rand int                nack_at_byte;   // -1: None, 0: Addr phase, 1..N: Data byte index
